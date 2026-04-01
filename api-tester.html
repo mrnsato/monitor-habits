@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habitos Monitor - API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .response {
+            background: #f5f5f5;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+            border-left: 4px solid #667eea;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .endpoint-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #28a745;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Habitos Monitor - API Tester</h1>
+
+        <div class="endpoint-status">
+            <div>
+                <strong>API Status:</strong> <span id="api-status">Checking...</span>
+            </div>
+            <div class="status-dot" id="status-indicator"></div>
+        </div>
+
+        <!-- Criar Usuário -->
+        <div class="section">
+            <h2>📝 Criar Usuário</h2>
+            <div class="form-group">
+                <label for="usuario-nome">Nome:</label>
+                <input type="text" id="usuario-nome" placeholder="João Silva" value="João Silva">
+            </div>
+            <div class="form-group">
+                <label for="usuario-email">Email:</label>
+                <input type="email" id="usuario-email" placeholder="joao@example.com" value="joao@example.com">
+            </div>
+            <div class="form-group">
+                <label for="usuario-senha">Senha:</label>
+                <input type="password" id="usuario-senha" placeholder="123456" value="123456">
+            </div>
+            <button onclick="criarUsuario()">Criar Usuário</button>
+            <div id="criar-response"></div>
+        </div>
+
+        <!-- Listar Usuários -->
+        <div class="section">
+            <h2>📋 Listar Usuários</h2>
+            <button onclick="listarUsuarios()">Listar Todos</button>
+            <div id="listar-response"></div>
+        </div>
+
+        <!-- Obter Usuário -->
+        <div class="section">
+            <h2>🔍 Obter Usuário</h2>
+            <div class="form-group">
+                <label for="usuario-id">ID do Usuário:</label>
+                <input type="number" id="usuario-id" placeholder="1" value="1">
+            </div>
+            <button onclick="obterUsuario()">Buscar</button>
+            <div id="obter-response"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api';
+
+        // Verificar status da API
+        function checkApiStatus() {
+            fetch(`${API_URL}/usuarios`)
+                .then(res => {
+                    document.getElementById('api-status').textContent = '🟢 Online';
+                    document.getElementById('status-indicator').classList.add('online');
+                })
+                .catch(err => {
+                    document.getElementById('api-status').textContent = '🔴 Offline';
+                    document.getElementById('status-indicator').classList.remove('online');
+                });
+        }
+
+        function mostrarResponse(elementId, data, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.className = `response ${type}`;
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function criarUsuario() {
+            const nome = document.getElementById('usuario-nome').value;
+            const email = document.getElementById('usuario-email').value;
+            const senha = document.getElementById('usuario-senha').value;
+
+            if (!nome || !email || !senha) {
+                mostrarResponse('criar-response', { erro: 'Preencha todos os campos' }, 'error');
+                return;
+            }
+
+            fetch(`${API_URL}/usuarios`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nome, email, senha })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    mostrarResponse('criar-response', data, res.ok ? 'success' : 'error');
+                    if (res.ok) {
+                        document.getElementById('usuario-id').value = data.id;
+                    }
+                })
+                .catch(err => mostrarResponse('criar-response', { erro: err.message }, 'error'));
+        }
+
+        function listarUsuarios() {
+            fetch(`${API_URL}/usuarios`)
+                .then(res => res.json())
+                .then(data => mostrarResponse('listar-response', data, 'success'))
+                .catch(err => mostrarResponse('listar-response', { erro: err.message }, 'error'));
+        }
+
+        function obterUsuario() {
+            const id = document.getElementById('usuario-id').value;
+            if (!id) {
+                mostrarResponse('obter-response', { erro: 'Informe um ID' }, 'error');
+                return;
+            }
+
+            fetch(`${API_URL}/usuarios/${id}`)
+                .then(res => res.json())
+                .then(data => mostrarResponse('obter-response', data, 'success'))
+                .catch(err => mostrarResponse('obter-response', { erro: err.message }, 'error'));
+        }
+
+        // Verificar status ao carregar
+        window.addEventListener('load', checkApiStatus);
+        setInterval(checkApiStatus, 5000);
+    </script>
+</body>
+</html>
